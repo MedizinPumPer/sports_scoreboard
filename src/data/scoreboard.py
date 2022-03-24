@@ -85,15 +85,20 @@ def get_penalty_players(players_list, roster):
 class Scoreboard:
     def __init__(self, overview, data):
         time_format = data.config.time_format
-        linescore = overview.linescore
+        #linescore = overview.linescore
 
-        away = linescore.teams.away
-        away_abbrev = data.teams_info[away.team.id].abbreviation
-        self.away_roster = data.teams_info[away.team.id].roster
 
-        home = linescore.teams.home
-        home_abbrev = data.teams_info[home.team.id].abbreviation
-        self.home_roster = data.teams_info[home.team.id].roster
+        away_id = overview.away_team_id
+        home_id = overview.home_team_id
+
+
+        away_abbrev = data.teams_info[away_id].abbrev
+        #self.away_roster = data.teams_info[away_id].roster
+
+        #home = linescore.competitors[0]
+        debug.info(home_id)
+        home_abbrev = data.teams_info[home_id].abbrev
+        #self.home_roster = data.teams_info[home_id].roster
 
         away_goal_plays = []
         home_goal_plays = []
@@ -103,7 +108,7 @@ class Scoreboard:
 
         if hasattr(overview,"plays"):
             plays = overview.plays
-            away_scoring_plays, away_penalty_play, home_scoring_plays, home_penalty_play = filter_plays(plays,away.team.id,home.team.id)
+            away_scoring_plays, away_penalty_play, home_scoring_plays, home_penalty_play = filter_plays(plays,overview.away_team_id,overview.home_team_id)
             
             # Get the Away Goal details
             # If the request to the API fails or is missing who scorer and the assists are, return an empty list of goal plays
@@ -128,39 +133,15 @@ class Scoreboard:
                     home_goal_plays = []
                     break
 
-            for play in away_penalty_play:
-                try:
-                    player = get_penalty_players(play['players'], self.away_roster)
-                    away_penalties.append(Penalty(play,player))
-                except KeyError:
-                    debug.error("Failed to get Goal details for current live game. will retry on data refresh")
-                    away_penalties = []
-                    break
 
-            for play in home_penalty_play:
-                try:
-                    player = get_penalty_players(play['players'], self.home_roster)
-                    home_penalties.append(Penalty(play,player))
-                except KeyError:
-                    debug.error("Failed to get Goal details for current live game. will retry on data refresh")
-                    home_penalties = []
-                    break
-
-        self.away_team = TeamScore(away.team.id, away_abbrev, away.team.name, away.goals, away.shotsOnGoal, away_penalties, away.powerPlay,
-                            away.numSkaters, away.goaliePulled, away_goal_plays)
-        self.home_team = TeamScore(home.team.id, home_abbrev, home.team.name, home.goals, home.shotsOnGoal, home_penalties, home.powerPlay,
-                            home.numSkaters, home.goaliePulled, home_goal_plays)
+        self.away_team = TeamScore(away_id, away_abbrev, overview.away_team_name, overview.away_score)
+        self.home_team = TeamScore(home_id, home_abbrev, overview.home_team_name, overview.home_score)
 
         self.date = convert_time(overview.game_date).strftime("%Y-%m-%d")
         self.start_time = convert_time(overview.game_date).strftime(time_format)
         self.status = overview.status
         self.periods = Periods(overview)
-        
-        try:
-            self.intermission = linescore.intermissionInfo.inIntermission
-        except:
-            debug.error("Intermission data unavailable")
-            self.intermission = False
+
 
         if data.status.is_final(overview.status) and hasattr(overview, "w_score") and hasattr(overview, "l_score"):
             self.winning_team = overview.w_team

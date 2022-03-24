@@ -8,16 +8,16 @@ class Periods:
     def __init__(self, overview):
         period_info = overview.linescore
         try:
-            intermission_info = period_info.intermissionInfo
-            self.is_intermission = intermission_info.inIntermission
-            self.intermission_time_remaining = intermission_info.intermissionTimeRemaining
+            intermission_info = period_info.type
+            #self.is_intermission = intermission_info.inIntermission
+            self.intermission_time_remaining = intermission_info.clock
         except AttributeError:
             self.is_intermission = False
 
         self.gameType = overview.game_type
-        self.number = period_info.currentPeriod
+        self.number = period_info.period
         try:
-            self.clock = period_info.currentPeriodTimeRemaining
+            self.clock = period_info.displayClock
         except AttributeError:
             self.clock = '00:00'
         self.get_ordinal()

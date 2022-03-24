@@ -16,22 +16,24 @@ def team_info():
     for g in res['sports'][0]['leagues'][0]['teams']:
         try:
             team = {
-                'team_id': g['team']['id'],
+                'team_id': int(g['team']['id']),
                 'name': g['team']['displayName'],
-                'abbreviation': g['team']['abbreviation'],
+                'abbrev': g['team']['abbreviation'],
                 'team_name': g['team']['name'],
                 'location_name': g['team']['location'],
                 'short_name': g['team']['shortDisplayName'],
                 'longname': g['team']['displayName'],
                 'color_main': g['team']['color'],
                 'color_second': g['team']['alternateColor'],
-                'logo': g['team']['logos'][0]['href']}
+                'stats': g['team']['record']['items'][0]['stats'],
+                'stats''gamesPlayed': g['team']['record']['items'][0]['stats'],
+                'logo': g['team']['logos'][0]['href']
+            }
             teams.append(team)
-
         except:
             debug.error("Missing data in current team info")
-
     return teams
+
 
 def player_info(playerId):
     data = nfl_api.data.get_nfl_player(playerId)
@@ -39,6 +41,7 @@ def player_info(playerId):
     player = parsed["people"][0]
 
     return MultiLevelObject(player)
+
 
 def status():
     data = nfl_api.data.get_nfl_game_status().json()
@@ -82,6 +85,7 @@ def series_record(seriesCode, season):
     parsed = data.json()
     return parsed["data"]
 
+
 def standings():
     standing_records = {}
 
@@ -89,7 +93,7 @@ def standings():
         'eastern': [],
         'western': []
     }
-    
+
     data = nfl_api.data.get_nfl_standings().json()
     divisions = data['records']
 
@@ -134,6 +138,7 @@ class Standings(object):
         different type of Standings.
 
     """
+
     def __init__(self, records, wildcard):
         self.data = records
         self.data_wildcard = wildcard
@@ -270,6 +275,7 @@ class Playoff():
 
     def __repr__(self):
         return self.__str__()
+
 
 class Info(nfl_api.object.Object):
     pass

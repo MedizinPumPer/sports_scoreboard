@@ -25,7 +25,7 @@ from renderer.loading_screen import Loading
 import debug
 import os
 
-SCRIPT_NAME = "NHL-LED-SCOREBOARD"
+SCRIPT_NAME = "NFL-LED-SCOREBOARD"
 
 SCRIPT_VERSION = "1.6.9"
 
@@ -156,5 +156,5 @@ if __name__ == "__main__":
         run()
 
     except KeyboardInterrupt:
-        print("Exiting NHL-LED-SCOREBOARD\n")
+        print("Exiting NFL-LED-SCOREBOARD\n")
         sys.exit(0)

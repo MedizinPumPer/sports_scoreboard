@@ -19,7 +19,7 @@ class SeasonCountdown:
         self.font = data.config.layout.font
         self.font.large = data.config.layout.font_large_2
         # Current season seems to not update until pre-season start so I will have to modify the Status and the nfl_api to get the coming season.
-        self.season_start = datetime.date(2021,10,12)
+        self.season_start = datetime.date(2022,9,8)
         self.days_until_season = (self.season_start - datetime.date.today()).days
         self.scroll_pos = self.matrix.width
 
@@ -30,7 +30,7 @@ class SeasonCountdown:
         #for testing purposes
         #self.days_until_season = 0
 
-        debug.info(str(self.days_until_season) + " days to NHL Season")
+        debug.info(str(self.days_until_season) + " days to NFL Season")
 
         if self.days_until_season <= 0:
             self.season_start_today()
@@ -43,11 +43,11 @@ class SeasonCountdown:
         #  it's just like Christmas!
         self.matrix.clear()
 
-        nhl_logo = Image.open(get_file('assets/logos/_local/nhl_logo_64x32.png'))
+        nfl_logo = Image.open(get_file('assets/logos/_local/nfl_logo_64x32.png'))
 
-        self.matrix.draw_image((15,0), nhl_logo)
+        self.matrix.draw_image((15,0), nfl_logo)
         
-        debug.info("2021-2022 season has begun")
+        debug.info("2022-2023 season has begun")
 
         self.matrix.render()
         self.sleepEvent.wait(0.5)
@@ -56,7 +56,7 @@ class SeasonCountdown:
         #draw bottom text        
         self.matrix.draw_text(
             (14,25), 
-            "2021-2022", 
+            "2022-2023",
             font=self.font,
             fill=(0,0,0),
             backgroundColor=(155,155,155)
@@ -68,13 +68,13 @@ class SeasonCountdown:
         
         self.matrix.clear()
 
-        nhl_logo = Image.open(get_file('assets/logos/_local/nhl_logo_64x32.png'))
+        nfl_logo = Image.open(get_file('assets/logos/_local/nfl_logo_64x32.png'))
         black_gradiant = Image.open(get_file('assets/images/64x32_scoreboard_center_gradient.png'))
 
-        self.matrix.draw_image((34,0), nhl_logo)
+        self.matrix.draw_image((34,0), nfl_logo)
         self.matrix.draw_image((-5,0), black_gradiant)
         
-        debug.info("Counting down to NHL 21-22")
+        debug.info("Counting down to NFL 22-23")
 
         self.matrix.render()
         self.sleepEvent.wait(0.5)
@@ -104,7 +104,8 @@ class SeasonCountdown:
         #draw bottom text        
         self.matrix.draw_text(
             (1,25), 
-            "NHL 21-22", 
+            "NFL 22-23",
+
             font=self.font,
             fill=(0,0,0),
             backgroundColor=(155,155,155)

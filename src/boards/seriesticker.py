@@ -122,7 +122,7 @@ class Seriesticker:
                     else:
                         # Request and store the game overview in the series instance
                         overview = series.get_game_overview(game["gameId"])
-                    
+
                     # get the scoreboard
                     try:
                         scoreboard = Scoreboard(overview, self.data)

@@ -19,7 +19,7 @@ class ScoreboardRenderer:
             self.matrix,
             data.config,
             self.layout.home_logo,
-            self.scoreboard.home_team.abbrev,
+            self.data.teams_info[self.scoreboard.home_team.id],
             'scoreboard',
             'home'
         )
@@ -27,7 +27,7 @@ class ScoreboardRenderer:
             self.matrix,
             data.config,
             self.layout.away_logo,
-            self.scoreboard.away_team.abbrev,
+            self.data.teams_info[self.scoreboard.away_team.id],
             'scoreboard',
             'away'
         )

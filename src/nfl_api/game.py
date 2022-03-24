@@ -44,7 +44,7 @@ def scoreboard(year, month, day):
             status = game['competitions'][0]['status']['type']['description']
             status_code = game['competitions'][0]['status']['type']['id']
             status_abstract_state = game['competitions'][0]['status']['type']['state']
-            linescore = game['competitions'][0].get('situation', {})
+            linescore = game['competitions'][0]['status']
 
             output = {
                 'game_id': game_id,

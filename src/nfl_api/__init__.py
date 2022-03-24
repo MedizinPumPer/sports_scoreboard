@@ -1,7 +1,7 @@
 import nfl_api.game
 import nfl_api.info
 import calendar
-
+import debug
 
 def day(year, month, day):
     """

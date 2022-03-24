@@ -232,7 +232,7 @@ class Data:
             return False
 
     #
-    # Daily NHL Data
+    # Daily NFL Data
 
     def get_teams(self):
         attempts_remaining = 5
@@ -429,7 +429,6 @@ class Data:
             info_by_id = {}
             for team in self.teams:
                 info_by_id[team.team_id] = team
-
             self.teams_info = info_by_id
         except TypeError:
             self.teams_info = []
