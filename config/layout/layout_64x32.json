@@ -25,11 +25,11 @@
       }
     },
     "home_logo": {
-      "position": [["50%", 15], 0],
+      "position": [["50%", 6], 0],
       "align": "left"
     },
     "away_logo": {
-      "position": [["50%", -15], 0],
+      "position": [["50%", -6], 0],
       "align": "right"
     },
     "vs": {

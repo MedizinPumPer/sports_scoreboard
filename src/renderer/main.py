@@ -53,10 +53,10 @@ class MainRenderer:
         
         while True:
             debug.info('Rendering...')
-            #if self.status.is_offseason(self.data.date()):
-                # Offseason (Show offseason related stuff)
-                #debug.info("It's offseason")
-                #self.__render_offday()
+            if self.status.is_offseason(self.data.date()):
+                #Offseason (Show offseason related stuff)
+                debug.info("It's offseason")
+                self.__render_offday()
             if self.data.config.testScChampions:
                 self.test_stanley_cup_champion(self.data.config.testScChampions)
 
@@ -68,8 +68,8 @@ class MainRenderer:
                 elif self.data.is_pref_team_offday():
                     debug.info("Your preferred teams are Off today")
                     self.__render_offday()
-                elif self.data.is_nhl_offday():
-                    debug.info("There is no game in the NHL today")
+                elif self.data.is_nfl_offday():
+                    debug.info("There is no game in the NFL today")
                     self.__render_offday()
                 else:
                     debug.info("Game Day Wooooo")
@@ -95,7 +95,6 @@ class MainRenderer:
             
 
     def __render_game_day(self):
-        debug.info("Showing Game")
         # Initialize the scoreboard. get the current status at startup
         self.data.refresh_overview()
         self.scoreboard = Scoreboard(self.data.overview, self.data)
@@ -149,6 +148,7 @@ class MainRenderer:
                 self.check_new_penalty()
                 self.check_new_goals()
                 self.__render_live(sbrenderer)
+                """
                 if self.scoreboard.intermission:
                     debug.info("Main event is in Intermission")
                     # Show Boards for Intermission
@@ -160,6 +160,7 @@ class MainRenderer:
                     self.boards._intermission(self.data, self.matrix,self.sleepEvent)
                 else:
                     self.sleepEvent.wait(self.refresh_rate)
+                    """
 
             elif self.status.is_game_over(self.data.overview.status):
                 debug.info("Game Over")
@@ -176,7 +177,7 @@ class MainRenderer:
 
             elif self.status.is_final(self.data.overview.status):
                 """ Post Game state """
-                debug.info("FINAL")
+                debug.info("Game is Final")
                 sbrenderer = ScoreboardRenderer(self.data, self.matrix, self.scoreboard)
                 self.check_new_goals()
                 if self.data.isPlayoff and self.data.stanleycup_round:

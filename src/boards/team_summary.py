@@ -2,7 +2,7 @@
     Show a summary of the favorite team. (previous game, next game, stats,)
 
 """
-from PIL import Image, ImageFont, ImageDraw, ImageOps
+from PIL import Image, ImageFont, ImageDraw, ImageOps, ImageColor
 from rgbmatrix import graphics
 import nfl_api
 from data.scoreboard import Scoreboard
@@ -10,6 +10,8 @@ from data.team import Team
 from time import sleep
 from utils import convert_date_format, get_file
 from renderer.logos import LogoRenderer
+import debug
+
 
 
 class TeamSummary:
@@ -19,6 +21,7 @@ class TeamSummary:
                 Need to move the Previous/Next game info in the data section. I think loading it in the data section
                 and then taking that info here would make sense
         '''
+        debug.info("Team Summary Display")
         self.data = data
         self.teams_info = data.teams_info
         self.preferred_teams = data.pref_teams
@@ -39,10 +42,10 @@ class TeamSummary:
             team = self.teams_info[team_id]
 
             team_colors = self.data.config.team_colors
-            bg_color = team_colors.color("{}.primary".format(team_id))
-            txt_color = team_colors.color("{}.text".format(team_id))
-            prev_game = 0  # team.previous_game
-            next_game = 0  # team.next_game
+            bg_color = tuple(int(item) for item in ImageColor.getcolor("#" + team.color_main, "RGB"))
+            txt_color = tuple(int(item) for item in ImageColor.getcolor("#" + team.color_second, "RGB"))
+            prev_game = team.events.prev_event
+            next_game = team.events.next_event
 
             logo_renderer = LogoRenderer(
                 self.matrix,
@@ -53,8 +56,8 @@ class TeamSummary:
             )
 
             try:
-                if prev_game:
-                    prev_game_id = self.teams_info[team_id].previous_game.dates[0]["games"][0]["gamePk"]
+                if prev_game > 0:
+                    prev_game_id = self.teams_info[team_id].events.prev_game
                     prev_game_scoreboard = Scoreboard(nfl_api.overview(prev_game_id), self.data)
                 else:
                     prev_game_scoreboard = False
@@ -66,7 +69,7 @@ class TeamSummary:
 
             try:
                 if next_game:
-                    next_game_id = self.teams_info[team_id].next_game.dates[0]["games"][0]["gamePk"]
+                    next_game_id = self.teams_info[team_id].events.next_event
                     next_game_scoreboard = Scoreboard(nfl_api.overview(next_game_id), self.data)
                 else:
                     next_game_scoreboard = False
@@ -77,7 +80,7 @@ class TeamSummary:
                 self.data.network_issues = True
 
             stats = team.stats
-            im_height = 67
+            im_height = 67 if prev_game > 0 else 46
             team_abbrev = team.abbrev
 
             i = 0
@@ -142,70 +145,70 @@ class TeamSummary:
         image = Image.new('RGB', (37, im_height))
         draw = ImageDraw.Draw(image)
 
-        draw.rectangle([0, 6, 26, -1], fill=(bg_color['r'], bg_color['g'], bg_color['b']))
+        draw.rectangle([0, 6, 26, -1], fill=(int(bg_color[0]), int(bg_color[1]), int(bg_color[2])))
 
-        draw.text((1, 0), "RECORD:".format(), fill=(txt_color['r'], txt_color['g'], txt_color['b']),
+        draw.text((1, 0), "RECORD:".format(), fill=(int(txt_color[0]), int(txt_color[1]), int(txt_color[2])),
                   font=self.font)
         if stats:
-            draw.text((0, 7), "GP:{} P:{}".format(stats.playedGames, stats.pts), fill=(255, 255, 255),
+            draw.text((0, 7), "GP:{}".format(stats.gamesPlayed), fill=(255, 255, 255),
                       font=self.font)
-            draw.text((0, 13), "{}-{}-{}".format(stats.wins, stats.losses, stats.ot), fill=(255, 255, 255),
+            draw.text((0, 13), "{}-{}".format(stats.gamesWins, stats.gamesLosses,), fill=(255, 255, 255),
                       font=self.font)
         else:
             draw.text((1, 7), "--------", fill=(200, 200, 200), font=self.font)
 
-        draw.rectangle([0, 27, 36, 21], fill=(bg_color['r'], bg_color['g'], bg_color['b']))
-        draw.text((1, 21), "LAST GAME:", fill=(txt_color['r'], txt_color['g'], txt_color['b']),
-                  font=self.font)
-        if prev_game_scoreboard:
-            if prev_game_scoreboard.away_team.id == self.team_id:
-                draw.text((0, 28), "@ {}".format(prev_game_scoreboard.home_team.abbrev), fill=(255, 255, 255),
-                          font=self.font)
-            if prev_game_scoreboard.home_team.id == self.team_id:
-                draw.text((0, 28), "VS {}".format(prev_game_scoreboard.away_team.abbrev), fill=(255, 255, 255),
-                          font=self.font)
-
-            if self.data.status.is_irregular(prev_game_scoreboard.status):
-                draw.text((0, 34), prev_game_scoreboard.status, fill=(255, 0, 0), font=self.font)
-
-            else:
-                if prev_game_scoreboard.winning_team == self.team_id:
-                    draw.text((0, 34), "W", fill=(50, 255, 50), font=self.font)
-                    draw.text((5, 34), "{}-{}".format(prev_game_scoreboard.away_team.goals,
-                                                      prev_game_scoreboard.home_team.goals),
-                              fill=(255, 255, 255), font=self.font)
-
-                if prev_game_scoreboard.loosing_team == self.team_id:
-                    draw.text((0, 34), "L", fill=(255, 50, 50), font=self.font)
-                    draw.text((5, 34), "{}-{}".format(prev_game_scoreboard.away_team.goals,
-                                                      prev_game_scoreboard.home_team.goals),
-                              fill=(255, 255, 255), font=self.font)
-
-        else:
-            draw.text((1, 27), "--------", fill=(200, 200, 200), font=self.font)
-
-        draw.rectangle([0, 48, 36, 42], fill=(bg_color['r'], bg_color['g'], bg_color['b']))
-        draw.text((1, 42), "NEXT GAME:", fill=(txt_color['r'], txt_color['g'], txt_color['b']),
-                  font=self.font)
-
         if next_game_scoreboard:
+            draw.rectangle([0, 27, 36, 21], fill=(int(bg_color[0]), int(bg_color[1]), int(bg_color[2])))
+            draw.text((1, 21), "NEXT GAME:", fill=(int(txt_color[0]), int(txt_color[1]), int(txt_color[2])),
+                      font=self.font)
+
             date = convert_date_format(next_game_scoreboard.date)
-            draw.text((0, 49), "{}".format(date.upper()), fill=(255, 255, 255), font=self.font)
+            draw.text((0, 28), "{}".format(date.upper()), fill=(255, 255, 255), font=self.font)
 
             if self.data.status.is_irregular(next_game_scoreboard.status):
                 if next_game_scoreboard.status == "Scheduled (Time TBD)":
                     next_game_scoreboard.status = "TBD"
-                draw.text((0, 55), "{}".format(next_game_scoreboard.status.upper()), fill=(255, 0, 0), font=self.font)
+                draw.text((0, 34), "{}".format(next_game_scoreboard.status.upper()), fill=(255, 0, 0), font=self.font)
             else:
-                draw.text((0, 55), "{}".format(next_game_scoreboard.start_time), fill=(255, 255, 255), font=self.font)
+                draw.text((0, 34), "{}".format(next_game_scoreboard.start_time), fill=(255, 255, 255), font=self.font)
 
             if next_game_scoreboard.away_team.id == self.team_id:
-                draw.text((0, 61), "@ {}".format(next_game_scoreboard.home_team.abbrev), fill=(255, 255, 255),
+                draw.text((0, 40), "@ {}".format(next_game_scoreboard.home_team.abbrev), fill=(255, 255, 255),
                           font=self.font)
             if next_game_scoreboard.home_team.id == self.team_id:
-                draw.text((0, 61), "VS {}".format(next_game_scoreboard.away_team.abbrev), fill=(255, 255, 255),
+                draw.text((0, 40), "VS {}".format(next_game_scoreboard.away_team.abbrev), fill=(255, 255, 255),
                           font=self.font)
         else:
             draw.text((1, 52), "--------", fill=(200, 200, 200), font=self.font)
 
+        if prev_game_scoreboard:
+            draw.rectangle([0, 48, 36, 42], fill=(int(bg_color[0]), int(bg_color[1]), int(bg_color[2])))
+            draw.text((1, 42), "LAST GAME:", fill=(int(txt_color[0]), int(txt_color[1]), int(txt_color[2])),
+                      font=self.font)
+
+            if prev_game_scoreboard.away_team.id == self.team_id:
+                draw.text((0, 55), "@ {}".format(prev_game_scoreboard.home_team.abbrev), fill=(255, 255, 255),
+                          font=self.font)
+            if prev_game_scoreboard.home_team.id == self.team_id:
+                draw.text((0, 55), "VS {}".format(prev_game_scoreboard.away_team.abbrev), fill=(255, 255, 255),
+                          font=self.font)
+
+            if self.data.status.is_irregular(prev_game_scoreboard.status):
+                draw.text((0, 66), prev_game_scoreboard.status, fill=(255, 0, 0), font=self.font)
+
+            else:
+                if prev_game_scoreboard.winning_team == self.team_id:
+                    draw.text((0, 66), "W", fill=(50, 255, 50), font=self.font)
+                    draw.text((5, 66), "{}-{}".format(prev_game_scoreboard.away_team.goals,
+                                                      prev_game_scoreboard.home_team.goals),
+                              fill=(255, 255, 255), font=self.font)
+
+                if prev_game_scoreboard.loosing_team == self.team_id:
+                    draw.text((0, 66), "L", fill=(255, 50, 50), font=self.font)
+                    draw.text((5, 66), "{}-{}".format(prev_game_scoreboard.away_team.goals,
+                                                      prev_game_scoreboard.home_team.goals),
+                              fill=(255, 255, 255), font=self.font)
+
+        #else:
+        #   draw.text((1, 27), "--------", fill=(200, 200, 200), font=self.font)
         return image

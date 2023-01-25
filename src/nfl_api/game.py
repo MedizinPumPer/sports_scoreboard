@@ -6,6 +6,7 @@ such as the scoreboard and the box score.
 from nfl_api.utils import convert_time
 import nfl_api.data
 import nfl_api.object
+import debug
 
 
 def scoreboard(year, month, day):
@@ -17,6 +18,8 @@ def scoreboard(year, month, day):
     if not data:
         return data
     parsed = data.json()
+
+    debug.error('scorebard data read')
 
     if parsed["events"]:
         games_data = parsed["events"]
@@ -44,7 +47,16 @@ def scoreboard(year, month, day):
             status = game['competitions'][0]['status']['type']['description']
             status_code = game['competitions'][0]['status']['type']['id']
             status_abstract_state = game['competitions'][0]['status']['type']['state']
-            linescore = game['competitions'][0]['status']
+            linescore = game['competitions'][0]
+            time = game['competitions'][0]['status']['displayClock']
+            quarter = game['competitions'][0]['status']['period']
+            over = game['competitions'][0]['status']['type']['completed']
+            redzone = ""
+            possession = ""
+            if "situation" in game['competitions'][0]:
+                redzone = game['competitions'][0]['situation']['isRedZone']
+                #possession = game['competitions'][0]['situation']['possession']
+            state = game['competitions'][0]['status']['type']['state']
 
             output = {
                 'game_id': game_id,
@@ -62,6 +74,12 @@ def scoreboard(year, month, day):
                 'status_abstract_state': status_abstract_state,
                 # All the linescore information (goals, sog, periods etc...)
                 'linescore': linescore,
+                'time': time,
+                'quarter': quarter,
+                'over': over,
+                'redzone': redzone,
+                'possession': possession,
+                'state': state
             }
 
             # put this dictionary into the larger dictionary
@@ -98,7 +116,9 @@ class GameScoreboard(object):
             self.l_team = self.home_team_id
 
         self.full_date = convert_time(self.game_date).strftime("%Y-%m-%d")
+        debug.error(self.full_date)
         self.start_time = convert_time(self.game_date).strftime("%I:%M")
+        debug.error(self.start_time)
 
     def __str__(self):
         return ('{0.away_team_name} ({0.away_score}) VS '
@@ -109,74 +129,71 @@ class GameScoreboard(object):
 
 
 def overview(game_id):
-    #data = nfl_api.data.get_overview(game_id)
-    data = nfl_api.data.get_nfl_schedule()
-    parsedData = data.json()
-    output = []
-    i = 0
-    for parsed in parsedData['events']:
-        if parsedData['id'] in game_id:
-            # Top level information (General)
-            id = parsed['id']
-            time_stamp = parsed['date']
-            game_type = parsed['season']['type']
-            status = parsed['status']['type']['description']
-            status_code = parsed['status']['type']['id']
-            status_abstract_state = parsed['status']['type']['name']
-            game_date = parsed['date']
+    data = nfl_api.data.get_nfl_overview(game_id)
+    #data = nfl_api.data.get_nfl_schedule()
+    parsed = data.json()
+    # Top level information (General)
+    id = parsed['id']
+    time_stamp = parsed['date']
+    game_type = parsed['season']['type']
+    status = parsed['status']['type']['description']
+    status_code = parsed['status']['type']['id']
+    status_abstract_state = parsed['status']['type']['name']
+    game_date = parsed['date']
 
-            # Sub level information (Details)
-            plays = parsed['liveData']['plays']
-            linescore = parsed['competitions'][0].get('situation', {})
-            boxscore = parsed['competitions'][0].get('situation', {})
-            away_score = linescore['competitions'][0].get('situation', {})
-            home_score = linescore['competitions'][0]['competitors'][0]['score']
+    # Sub level information (Details)
+    plays = 0#parsed['liveData']['plays']
+    linescore = parsed['competitions'][0].get('situation', {})
+    boxscore = 0#
+    away_score = parsed['competitions'][0]['competitors'][1]['score']
+    home_score = parsed['competitions'][0]['competitors'][0]['score']
 
-            # Team details
-            away_team_id = parsed['competitions'][0]['competitors'][1]['team']['id']
-            away_team_name = parsed['competitions'][0]['competitors'][1]['team']['shortDisplayName']
-            away_team_abrev = parsed['competitions'][0]['competitors'][1]['team']['abbreviation']
-            home_team_id = parsed['competitions'][0]['competitors'][0]['team']['id']
-            home_team_name = parsed['competitions'][0]['competitors'][0]['team']['shortDisplayName']
-            home_team_abrev = parsed['competitions'][0]['competitors'][0]['team']['abbreviation']
+    # Team details
+    away_team_id = parsed['competitions'][0]['competitors'][1]['team']['id']
+    away_team_name = parsed['competitions'][0]['competitors'][1]['team']['shortDisplayName']
+    away_team_abrev = parsed['competitions'][0]['competitors'][1]['team']['abbreviation']
+    home_team_id = parsed['competitions'][0]['competitors'][0]['team']['id']
+    home_team_name = parsed['competitions'][0]['competitors'][0]['team']['shortDisplayName']
+    home_team_abrev = parsed['competitions'][0]['competitors'][0]['team']['abbreviation']
 
-            # 3 stars (if any available)
-            try:
-                first_star = parsed['liveData']['decisions']['firstStar']
-                second_star = parsed['liveData']['decisions']['secondStar']
-                third_star = parsed['liveData']['decisions']['thirdStar']
+    # 3 stars (if any available)
+    try:
+        first_star = parsed['liveData']['decisions']['firstStar']
+        second_star = parsed['liveData']['decisions']['secondStar']
+        third_star = parsed['liveData']['decisions']['thirdStar']
 
-            except:
-                first_star = {}
-                second_star = {}
-                third_star = {}
+    except:
+        first_star = {}
+        second_star = {}
+        third_star = {}
 
-            output = {
-                'id': id,  # ID of the game
-                'time_stamp': time_stamp,  # Last time the data was refreshed (UTC)
-                # Type of game ("R" for Regular season, "P" for Post season or playoff)
-                'game_type': game_type,
-                'status': status,   # Status of the game.
-                'status_code': status_code,
-                'status_abstract_state': status_abstract_state,
-                'game_date': game_date,  # Date and time of the game
-                'away_team_id': away_team_id,  # ID of the Away team
-                'away_team_name': away_team_name,  # Away team name
-                'away_team_abrev': away_team_abrev,  # Away team name abbreviation
-                'home_team_id': home_team_id,  # ID of the Home team
-                'home_team_name': home_team_name,  # Home team name
-                'home_team_abrev': home_team_abrev,  # Home team name abbreviation
-                # All the linescore information (goals, sog, periods etc...)
-                'linescore': linescore,
-                # All the boxscore information (players, onice, team's stats, penalty box etc...)
-                'boxscore': boxscore,
-                'away_score': away_score,  # Away team goals
-                'home_score': home_score,  # Home team goals
-                'plays': plays,  # Dictionary of all the plays of the game.
-                'first_star': first_star,
-                'second_star': second_star,
-                'third_star': third_star
-            }
+    output = {
+        'id': id,  # ID of the game
+        'time_stamp': time_stamp,  # Last time the data was refreshed (UTC)
+        # Type of game ("R" for Regular season, "P" for Post season or playoff)
+        'game_type': game_type,
+        'status': status,   # Status of the game.
+        'status_code': status_code,
+        'status_abstract_state': status_abstract_state,
+        'game_date': game_date,  # Date and time of the game
+        'away_team_id': away_team_id,  # ID of the Away team
+        'away_team_name': away_team_name,  # Away team name
+        'away_team_abrev': away_team_abrev,  # Away team name abbreviation
+        'home_team_id': home_team_id,  # ID of the Home team
+        'home_team_name': home_team_name,  # Home team name
+        'home_team_abrev': home_team_abrev,  # Home team name abbreviation
+        # All the linescore information (goals, sog, periods etc...)
+        'linescore': linescore,
+        # All the boxscore information (players, onice, team's stats, penalty box etc...)
+        'boxscore': boxscore,
+        'away_score': away_score,  # Away team goals
+        'home_score': home_score,  # Home team goals
+        'plays': plays,  # Dictionary of all the plays of the game.
+        'first_star': first_star,
+        'second_star': second_star,
+        'third_star': third_star
+    }
+
 
     return output
 
@@ -197,7 +214,7 @@ class Overview(object):
             except TypeError:
                 obj = nfl_api.object.Object(data[x])
                 setattr(self, x, obj)
-        
+
         # calculate the winning team
         if self.home_score > self.away_score:
             self.w_team = self.home_team_id

@@ -61,10 +61,10 @@ class LogoRenderer:
             self.logo = self.logo.transpose(method=Image.FLIP_LEFT_RIGHT)
         if (crop != 0):
             self.logo = self.logo.crop((
-                self.logo.width * (crop[0]),
+                self.logo.width * (crop[1]),
                 self.logo.height * (crop[1]),
-                self.logo.width - (self.logo.width * (crop[2])) + 6,
-                self.logo.height - (self.logo.height * (crop[3])) + 6,
+                self.logo.width - (self.logo.width * (crop[2])) + 1,
+                self.logo.height - (self.logo.height * (crop[3])) + 1,
             ))
 
     def save_image(self, filename, team_abbrev):

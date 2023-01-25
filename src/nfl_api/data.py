@@ -8,19 +8,21 @@ import debug
         https://records.nhl.com/site/api/playoff-series?cayenneExp=playoffSeriesLetter="A" and seasonId=20182019
 """
 
-BASE_URL = "https://site.api.espn.com/apis"
-BASE_NFL_URL = BASE_URL + '/site/v2/sports/football/nfl'
+BASE_URL = "https://site.api.espn.com"
+BASE_NFL_URL = BASE_URL + '/apis/site/v2/sports/football/nfl'
 SCHEDULE_URL = BASE_NFL_URL + '/scoreboard'
 TEAM_URL = BASE_NFL_URL + '/teams'
+TEAM_URL_DETAIL = TEAM_URL + '/{0}'
+TEAM_URL_SCHEDULE = TEAM_URL_DETAIL + '/schedule'
 PLAYER_URL = '{0}people/{1}'
 #OVERVIEW_URL = BASE_URL + 'game/{0}/feed/live?site=en_nhl'
-OVERVIEW_URL = BASE_NFL_URL + '/events/event={}'
-STATUS_URL = BASE_URL + '/v2/scoreboard/header?sport=football&league=nfl'
+OVERVIEW_URL = BASE_NFL_URL + '/scoreboard/{}'
+STATUS_URL = BASE_URL + '/apis/v2/scoreboard/header?sport=football&league=nfl'
 CURRENT_SEASON_URL = BASE_NFL_URL + '/scoreboard'
-STANDINGS_URL = BASE_URL + '/standings'
+STANDINGS_URL = BASE_URL + '/apis/standings'
 STANDINGS_WILD_CARD = STANDINGS_URL + '/wildCardWithLeaders'
 #PLAYOFF_URL = BASE_URL + "tournaments/playoffs?expand=round.series,schedule.game.seriesSummary&season={}"
-PLAYOFF_URL = BASE_URL + "/common/v3/sports/football/nfl/statistics/byteam?region=us&lang=en&contentorigin=espn&sort=team.passing.netYardsPerGame%3Adesc&limit=32&season={}}&seasontype=3"
+PLAYOFF_URL = BASE_URL + "/apis/common/v3/sports/football/nfl/statistics/byteam?region=us&lang=en&contentorigin=espn&sort=team.passing.netYardsPerGame%3Adesc&limit=32&season={}}&seasontype=3"
 SERIES_RECORD = "https://records.nhl.com/site/api/playoff-series?cayenneExp=playoffSeriesLetter='{}' and seasonId={}"
 REQUEST_TIMEOUT = 5
 
@@ -41,6 +43,13 @@ def get_nfl_teams():
     except requests.exceptions.RequestException as e:
         raise ValueError(e)
 
+def get_nfl_team(teamID):
+    try:
+        data = requests.get(TEAM_URL_DETAIL.format(teamID), timeout=REQUEST_TIMEOUT)
+        return data
+    except requests.exceptions.RequestException as e:
+        raise ValueError(e)
+
 def get_nfl_player(playerId):
     try:
         data = requests.get(PLAYER_URL.format(BASE_URL, playerId), timeout=REQUEST_TIMEOUT)
@@ -52,7 +61,6 @@ def get_nfl_player(playerId):
 def get_nfl_overview(game_id):
     try:
         data = requests.get(OVERVIEW_URL.format(game_id), timeout=REQUEST_TIMEOUT)
-        # data = dummie_overview()
         return data
     except requests.exceptions.RequestException as e:
         raise ValueError(e)

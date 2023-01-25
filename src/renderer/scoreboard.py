@@ -1,6 +1,9 @@
 from PIL import Image, ImageFont, ImageDraw, ImageSequence
 from utils import center_text, convert_date_format, get_file
 from renderer.logos import LogoRenderer
+import debug
+from datetime import date
+
 
 
 class ScoreboardRenderer:
@@ -61,9 +64,6 @@ class ScoreboardRenderer:
         if self.status.is_live(self.scoreboard.status):
             self.draw_live()
 
-        if self.status.is_game_over(self.scoreboard.status):
-            self.draw_final()
-
         if self.status.is_final(self.scoreboard.status):
             self.draw_final()
 
@@ -73,11 +73,22 @@ class ScoreboardRenderer:
 
     def draw_scheduled(self):
         start_time = self.scoreboard.start_time
+        start_date = self.scoreboard.date
+        display_text = ""
+
+        if start_date == str(date.today()):
+            display_text = 'TODAY'
+        elif int(start_date[-1]) -1 == int(str(date.today())[-1]):
+            display_text = 'TOMORROW'
+        else:
+            display_text = start_date
+
+
 
         # Draw the text on the Data image.
         self.matrix.draw_text_layout(
-          self.layout.scheduled_date, 
-          'TODAY'
+          self.layout.scheduled_date,
+            display_text
         )
         self.matrix.draw_text_layout(
           self.layout.scheduled_time, 
@@ -94,14 +105,16 @@ class ScoreboardRenderer:
 
     def draw_live(self):
         # Get the Info
-        period = self.scoreboard.periods.ordinal
-        clock = self.scoreboard.periods.clock
+        debug.info('draw_live')
+        #period = self.scoreboard.periods.ordinal
+        #clock = self.scoreboard.periods.clock
         score = '{}-{}'.format(self.scoreboard.away_team.goals, self.scoreboard.home_team.goals)
         
 
         if self.show_SOG:
             self.draw_SOG()
             self.show_SOG = False
+            """""
         else:
             # Draw the info
             self.matrix.draw_text_layout(
@@ -112,6 +125,7 @@ class ScoreboardRenderer:
                 self.layout.clock,
                 clock
             )
+            """""
 
         self.matrix.draw_text_layout(
             self.layout.score,
@@ -125,7 +139,8 @@ class ScoreboardRenderer:
 
     def draw_final(self):
         # Get the Info
-        period = self.scoreboard.periods.ordinal
+        #period = self.scoreboard.periods.ordinal
+        #period.number = 4
         result = self.scoreboard.periods.clock
         score = '{}-{}'.format(self.scoreboard.away_team.goals, self.scoreboard.home_team.goals)
         date = convert_date_format(self.scoreboard.date)
@@ -137,8 +152,8 @@ class ScoreboardRenderer:
         )
 
         end_text = result
-        if self.scoreboard.periods.number > 3:
-            end_text = "F/{}".format(period)
+        #if self.scoreboard.periods.number > 3:
+        #    end_text = "F/{}".format(period)
 
         self.matrix.draw_text_layout(
             self.layout.period_final, 

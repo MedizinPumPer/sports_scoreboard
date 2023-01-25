@@ -1,12 +1,14 @@
 from datetime import datetime
 from nfl_api import game_status_info, current_season_info
+from utils import convert_time
 import debug
 
 class Status:
     def __init__(self):
+        debug.error("status")
         game_status = game_status_info()['sports'][0]['leagues'][0]
-        self.season_info = current_season_info()['leagues'][0]['season']
-        self.season_id = self.season_info['year']
+        self.season_info = current_season_info()['leagues'][0]['calendar']
+        #self.season_id = self.season_info['value']
         self.Preview = []
         self.Live = []
         self.GameOver = []
@@ -16,6 +18,7 @@ class Status:
         #
         # https://www.espn.com/apis/devcenter/docs/scores.html
         #
+
         for status in game_status['events']:
             if status['fullStatus']['type']['id'] == "1" or status['fullStatus']['type']['id'] == '7':
                 self.Preview.append(status['fullStatus']['type']['description'])
@@ -44,18 +47,31 @@ class Status:
 
     def is_offseason(self, date):
         try:
-            regular_season_startdate = datetime.strptime(self.season_info['regularSeasonStartDate'], "%Y-%m-%d").date()
-            end_of_season = datetime.strptime(self.season_info['seasonEndDate'], "%Y-%m-%d").date()
+            pre_season_startdate = convert_time(datetime.strptime(self.season_info[0]['startDate'], '%Y-%m-%dT%H:%MZ').date())
+            pre_season_enddate = convert_time(datetime.strptime(self.season_info[0]['endDate'], '%Y-%m-%dT%H:%MZ').date())
+            regular_season_startdate = convert_time(datetime.strptime(self.season_info[1]['startDate'], '%Y-%m-%dT%H:%MZ').date())
+            end_of_season = convert_time(datetime.strptime(self.season_info[1]['endDate'], '%Y-%m-%dT%H:%MZ').date())
             return date < regular_season_startdate or date > end_of_season
         except:
             debug.error('The Argument provided for status.is_offseason is missing or not right.')
             return False
 
+    def is_preseason(self, date):
+        try:
+            pre_season_startdate = convert_time(datetime.strptime(self.season_info[0]['startDate'], '%Y-%m-%dT%H:%MZ').date())
+            pre_season_enddate = convert_time(datetime.strptime(self.season_info[0]['endDate'], '%Y-%m-%dT%H:%MZ').date())
+            return date < pre_season_startdate or date > pre_season_enddate
+        except:
+            debug.error('The Argument provided for status.is_preseason is missing or not right.')
+            return False
+
+
+
     def is_playoff(self, date, playoff_obj):
         try:
             # Get dates of the planned end of regular season and end of season
-            regular_season_enddate = datetime.strptime(self.season_info['regularSeasonEndDate'], "%Y-%m-%d").date()
-            end_of_season = datetime.strptime(self.season_info['seasonEndDate'], "%Y-%m-%d").date()
+            regular_season_enddate = convert_time(datetime.strptime(self.season_info[2]['endDate'], "%Y-%m-%d").date())
+            end_of_season = convert_time(datetime.strptime(self.season_info[2]['startDate'], "%Y-%m-%d").date())
 
             return regular_season_enddate < date <= end_of_season and playoff_obj.rounds
         except TypeError:

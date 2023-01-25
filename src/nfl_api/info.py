@@ -19,21 +19,54 @@ def team_info():
                 'team_id': int(g['team']['id']),
                 'name': g['team']['displayName'],
                 'abbrev': g['team']['abbreviation'],
-                'team_name': g['team']['name'],
+                'team_name': g['team']['shortDisplayName'],
                 'location_name': g['team']['location'],
                 'short_name': g['team']['shortDisplayName'],
                 'longname': g['team']['displayName'],
                 'color_main': g['team']['color'],
                 'color_second': g['team']['alternateColor'],
-                'stats': g['team']['record']['items'][0]['stats'],
-                'stats''gamesPlayed': g['team']['record']['items'][0]['stats'],
-                'logo': g['team']['logos'][0]['href']
+                'logo': g['team']['logos'][0]['href'],
+                'stats': "",
+                'stats''gamesPlayed': "0",
+                'stats''gamesWins': "0",
+                'stats''gamesLosses': "0",
+                'events': "",
+                'events''next_event': 0,
+                'events''prev_event': 0
             }
+            team = team_stats(team)
+            team = team_event(team)
             teams.append(team)
         except:
-            debug.error("Missing data in current team info")
+            debug.error("Missing data in current team info: " + team['name'])
     return teams
 
+def team_stats(team):
+    try:
+        res = nfl_api.data.get_nfl_team(team['team_id'])
+        res = res.json()
+        team['stats'] = res['team']['record']['items'][0]['summary']
+        team['stats'] = {
+            'gamesWins': res['team']['record']['items'][0]['stats'][1]['value'],
+            'gamesLosses': res['team']['record']['items'][0]['stats'][2]['value'],
+            'gamesPlayed': res['team']['record']['items'][0]['stats'][8]['value']
+        }
+    except:
+        debug.error("Missing data in current team info: " + team['team'])
+    return team
+
+def team_event(team):
+    try:
+        res = nfl_api.data.get_nfl_team(team['team_id'])
+        res = res.json()
+        team['events'] = res['team']['nextEvent'][0]['id']
+        team['events'] = {
+            'next_event': int(res['team']['nextEvent'][0]['id']) if int(res['team']['nextEvent'][0]['id']) > 0 else 0,
+            'prev_event': 0
+        }
+    except:
+        debug.error("Missing data in current team info: " + team['team'])
+    return team
 
 def player_info(playerId):
     data = nfl_api.data.get_nfl_player(playerId)

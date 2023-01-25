@@ -45,7 +45,7 @@ class Scoreticker:
                 self.index += 1
 
         except IndexError:
-            debug.info("no game to display, you set preferred teams only or NHL OFF DAY today")
+            debug.info("no game to display, you set preferred teams only or NFL OFF DAY today")
             return
 
     def show_indicator(self):

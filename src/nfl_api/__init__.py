@@ -29,7 +29,8 @@ def player(playerId):
 
 def overview(game_id):
     """Return Overview object that contains game information."""
-    return nfl_api.game.Overview(nfl_api.game.overview(game_id))
+    restult = nfl_api.game.overview(game_id)
+    return nfl_api.game.Overview(restult)
 
 
 def game_status_info():

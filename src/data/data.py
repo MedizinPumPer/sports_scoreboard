@@ -213,7 +213,7 @@ class Data:
             debug.info('It is a new day, refreshing Data')
 
             # Set the pointer to the first game in the list of Pref Games
-            #self.current_game_index = 0
+            # self.current_game_index = 0
 
             # Today's date
             self.today = self.date()
@@ -294,7 +294,7 @@ class Data:
                 self.refresh_games()
 
     def check_game_priority(self):
-        """
+        self.finished_ = """
             Function that handle the live game.
 
             Show the earliest game until the most prefered game start. 
@@ -311,18 +311,18 @@ class Data:
         """
 
         self.current_game_id = self.pref_games[0].game_id
-        earliest_start_time = datetime.strptime(self.pref_games[0].game_date, '%Y-%m-%dT%H:%M:%SZ')
+        earliest_start_time = datetime.strptime(self.pref_games[0].game_date, '%Y-%m-%dT%H:%MZ')
         debug.info('checking highest priority game')
         for g in self.pref_games:
             if not self.status.is_final(g.status):
                 # If the game started.
-                if datetime.strptime(g.game_date, '%Y-%m-%dT%H:%M:%SZ') <= datetime.utcnow():
+                if datetime.strptime(g.game_date, '%Y-%m-%dT%H:%MZ') <= datetime.utcnow():
                     debug.info('Showing highest priority live game. {} vs {}'.format(g.away_team_name, g.home_team_name))
                     self.current_game_id = g.game_id
                     return
                 # If the game has not started but is ealier then the previous set game
-                if datetime.strptime(g.game_date, '%Y-%m-%dT%H:%M:%SZ') < earliest_start_time:
-                    earliest_start_time = datetime.strptime(g.game_date, '%Y-%m-%dT%H:%M:%SZ')
+                if datetime.strptime(g.game_date, '%Y-%m-%dT%H:%MZ') < earliest_start_time:
+                    earliest_start_time = datetime.strptime(g.game_date, '%Y-%m-%dT%H:%MZ')
                     self.current_game_id = g.game_id
                     debug.info('Showing earliest game. {} vs {}'.format(g.away_team_name, g.home_team_name))
                     earliest = True

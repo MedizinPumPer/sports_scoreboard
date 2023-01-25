@@ -20,7 +20,6 @@ def filter_plays(plays, away_id, home_id):
         Take a list of scoring plays and split them into their cooresponding team.
         return two list, one for each team.
     """
-    all_plays = plays.allPlays
     scoring_plays = []
     penalty_plays = []
     away_goals = []
@@ -28,13 +27,6 @@ def filter_plays(plays, away_id, home_id):
     home_goals = []
     home_penalties = []
 
-    # Filter the scoring plays out of all the plays
-    for i in plays.scoringPlays:
-        scoring_plays.append(all_plays[i])
-    
-    # Filter the Penalty plays out of all the plays
-    for i in plays.penaltyPlays:
-        penalty_plays.append(all_plays[i])
 
     away_goals = [ x for x in scoring_plays if x['team']['id'] == away_id]
     home_goals = [ x for x in scoring_plays if x['team']['id'] == home_id]
@@ -85,26 +77,12 @@ def get_penalty_players(players_list, roster):
 class Scoreboard:
     def __init__(self, overview, data):
         time_format = data.config.time_format
-        #linescore = overview.linescore
-
-
         away_id = overview.away_team_id
         home_id = overview.home_team_id
 
-
         away_abbrev = data.teams_info[away_id].abbrev
-        #self.away_roster = data.teams_info[away_id].roster
-
-        #home = linescore.competitors[0]
-        debug.info(home_id)
         home_abbrev = data.teams_info[home_id].abbrev
-        #self.home_roster = data.teams_info[home_id].roster
 
-        away_goal_plays = []
-        home_goal_plays = []
-
-        away_penalties = []
-        home_penalties = []
 
         if hasattr(overview,"plays"):
             plays = overview.plays
@@ -116,7 +94,6 @@ class Scoreboard:
             for play in away_scoring_plays:
                 try:
                     players = get_goal_players(play['players'], self.away_roster, self.home_roster)
-                    away_goal_plays.append(Goal(play, players))
                 except KeyError:
                     debug.error("Failed to get Goal details for current live game. will retry on data refresh")
                     away_goal_plays = []
@@ -127,7 +104,6 @@ class Scoreboard:
             for play in home_scoring_plays:
                 try:
                     players = get_goal_players(play['players'], self.home_roster, self.away_roster)
-                    home_goal_plays.append(Goal(play,players))
                 except KeyError:
                     debug.error("Failed to get Goal details for current live game. will retry on data refresh")
                     home_goal_plays = []
@@ -141,6 +117,7 @@ class Scoreboard:
         self.start_time = convert_time(overview.game_date).strftime(time_format)
         self.status = overview.status
         self.periods = Periods(overview)
+
 
 
         if data.status.is_final(overview.status) and hasattr(overview, "w_score") and hasattr(overview, "l_score"):
@@ -181,3 +158,10 @@ class Penalty:
         self.team_id = play['team']['id']
         self.period = play['about']['ordinalNum']
         self.periodTime = play['about']['periodTime']
+
+class Redzone:
+    def __init__(self, redzone):
+        info = redzone['competitions'][0]
+        self.situation = info.get('situation', {}).get('isRedZone'),
+        self.possession = info.get('situation', {}).get('possession'),
+        self.state= info['status']['type']['state']
